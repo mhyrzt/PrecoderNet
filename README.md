@@ -1,10 +1,10 @@
 # PrecoderNet (🚧👷⚠️)
+
 PrecoderNet: Hybrid Beamforming for Millimeter Wave Systems with Deep Reinforcement Learning
 
-
-
 ## Article
-```
+
+```python
 @ARTICLE{9112250,
   author={Wang, Qisheng and Feng, Keming and Li, Xiao and Jin, Shi},
   journal={IEEE Wireless Communications Letters}, 
