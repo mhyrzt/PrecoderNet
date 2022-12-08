@@ -1,6 +1,7 @@
 import torch as T
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm.autonotebook import tqdm
 
 
 def h(x: T.tensor) -> T.tensor:
@@ -12,11 +13,18 @@ def to_tenser(x: np.ndarray) -> T.tensor:
 
 
 def constraint(v_rf: T.tensor, v_bb: T.tensor) -> T.tensor:
+    v_rf = v_rf / v_rf.abs()
     t1 = T.matmul(v_rf, v_bb)
     t2 = T.matmul(t1, h(v_bb))
     t3 = T.matmul(t2, h(v_rf))
     tr = T.trace(t3)
     return tr
+
+
+def compstr(c, ndigits: int = 6):
+    r = round(c.real, ndigits)
+    i = round(c.imag, ndigits)
+    return f"{r} + j{i}"
 
 
 def find_v_rf(
@@ -26,36 +34,44 @@ def find_v_rf(
     a: float,
     epochs: int
 ) -> list[np.ndarray]:
-    
+
     p -= p / a
     v_bb = to_tenser(v_bb)
     v_rf = to_tenser(v_rf).requires_grad_()
 
     losses = []
     optimizer = T.optim.Adam([v_rf])
-    for _ in range(epochs):
+    for i in (pbar := tqdm(range(epochs))):
         optimizer.zero_grad()
         loss = (constraint(v_rf, v_bb) - p) ** 2
+        if i % 50 == 0:
+            pbar.set_description(f"loss = {compstr(loss.item())}")
         loss.backward()
         optimizer.step()
         losses.append(loss.item())
 
-    return v_rf.detach().cpu().numpy(), np.array(losses)
+    del optimizer
+    v_rf = v_rf.detach().cpu().numpy()
+    v_rf = v_rf / np.abs(v_rf)
+    return v_rf, np.array(losses)
 
 
-def plot_loss(v_rf, v_bb, err, start=0):
+def plot_loss(v_rf: np.ndarray, v_bb: np.ndarray, losses: np.ndarray, start: int=0):
+    assert start >= 0 and start < len(losses), "start should be gte 0 and lt len(loss)"
+    y = losses[start:]
     x = list(range(len(y)))
-    y = err[-start:]
-    c = constraint(v_rf, v_bb).item()
-    r = round(c.real, 4)
-    i = round(c.imag, 4)
-    l = len(err) - start
-    t = f"LOSS $ v_rf $ | $ Constraint = {r} + j{i} $ | last {l}"
+    c = constraint(to_tenser(v_rf), to_tenser(v_bb)).item()
+    t = " | ".join(["Loss $ V_{rf} $", f"$ Constraint = {compstr(c)} $"])
+    fig, ax = plt.subplots(dpi=200, figsize=(8, 4))
     
-    fig, ax = plt.subplots(dpi=200)
     ax.plot(x, np.real(y), label="$ Real(loss) $")
     ax.plot(x, np.imag(y), label="$ Imag(loss) $")
     ax.set_title(t)
+    ticks = ax.get_xticks() + start
+    ticks = ticks.astype(np.int32)
+    ax.set_xticklabels(ticks)
+    ax.set_xlabel("Epoch")
+    ax.set_ylabel("Loss")
     ax.grid()
     ax.legend()
     return fig

@@ -35,12 +35,13 @@ class Environment:
         self.size_v_rf: tuple[int] = (self.n_t_rf, self.n_s)
         self.size_w_rf: tuple[int] = (self.n_r, self.n_r_rf)
 
+        self.channel_matrix: np.ndarray = channel_matrix
+
         self.w_rf: np.ndarray = self._get_init_w_rf()  # Analog Combiner (Init Random)
         self.v_bb: np.ndarray = self._get_init_v_bb()  # Digital Beamformer (Init Random)
         self.v_rf: np.ndarray = self._calc_v_rf()
         self.w_bb: np.ndarray = self._calc_w_bb()
 
-        self.channel_matrix: np.ndarray = channel_matrix
 
     def _rand(self, size: tuple, low: float, high: float, j: bool = False) -> np.ndarray:
         """_summary_
@@ -77,7 +78,9 @@ class Environment:
         return self._complex_rand(self.size_v_bb)
 
     def _get_init_w_rf(self) -> np.ndarray:
-        return self._complex_rand(self.size_w_rf)
+        w_rf = self._complex_rand(self.size_w_rf)
+        w_rf = w_rf / np.abs(w_rf)
+        return w_rf
 
     def _reshape(self, real: np.ndarray, imag: np.ndarray, size: tuple) -> np.ndarray:
         return np.reshape(real + imag,  size)
@@ -92,12 +95,10 @@ class Environment:
         v = self._calc_v_t()
         c = self._calc_c_n()
         h = self.channel_matrix
-
-        b2 = self.beta ** 2
         c_1 = np.linalg.inv(c)
 
-        A = (1 + (b2 * self.P / self.var)) * self.I
-        B = (1 - b2) * c_1 @ H(w) @ h @ v @ H(v) @ H(h) @ w
+        A = (1 + (self.beta * self.P / self.var)) * np.eye(self.n_s)
+        B = (1 - self.beta) * c_1 @ H(w) @ h @ v @ H(v) @ H(h) @ w
         print("reward", "B", B, B.shape)
         return np.log2(np.linalg.det(A + B))
 
@@ -107,7 +108,9 @@ class Environment:
 
     def _calc_v_rf(self) -> np.ndarray:
         init = self._complex_rand(self.size_v_rf)
-        return find_v_rf(init, self.v_bb, self.P, 10, 30_000)
+        v_rf, losses = find_v_rf(init, self.v_bb, self.P, 10, 10_000)
+        self.v_rf_loss = losses
+        return v_rf
 
     def _calc_v_t(self):
         return self.v_rf @ self.v_bb
@@ -121,12 +124,10 @@ class Environment:
     def _calc_psi(self) -> np.ndarray:
         h = self.channel_matrix
         v_t = self._calc_v_t()
-        b_2 = self.beta ** 2
 
-        a = (1 - b_2)
+        a = (1 - self.beta)
         b = h @ H(v_t) @ H(h)
-        print("psi", "b", b, b.shape)
-        c = (b_2 * self.P + self.var) * self.I
+        c = (self.beta * self.P + self.var) * np.eye(self.n_r)
 
         return a * b + c
 
@@ -135,10 +136,9 @@ class Environment:
         h = self.channel_matrix
         v_t = self._calc_v_t()
         psi = self._calc_psi()
-        cof = np.sqrt(1 - (self.beta ** 2))
+        cof = np.sqrt(1 - self.beta)
         w_rf = self.w_rf
         w_rf_h = H(w_rf)
-
         w_bb = cof * (np.linalg.inv(w_rf_h @ psi @ w_rf) @ w_rf_h @ h @ v_t)
         return w_bb
 
