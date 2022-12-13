@@ -16,6 +16,8 @@ class Environment:
         n_r_rf: int,
         n_cl: int,
         n_ray: int,
+        v_rf_a: float,
+        v_rf_iteration: int,
         channel_matrix: np.ndarray,
     ) -> None:
         self.P: float = P
@@ -35,13 +37,14 @@ class Environment:
         self.size_v_rf: tuple[int] = (self.n_t_rf, self.n_s)
         self.size_w_rf: tuple[int] = (self.n_r, self.n_r_rf)
 
+        self.v_rf_a: float = v_rf_a
+        self.v_rf_iteration: int = v_rf_iteration
         self.channel_matrix: np.ndarray = channel_matrix
 
         self.w_rf: np.ndarray = self._get_init_w_rf()  # Analog Combiner (Init Random)
         self.v_bb: np.ndarray = self._get_init_v_bb()  # Digital Beamformer (Init Random)
         self.v_rf: np.ndarray = self._calc_v_rf()
         self.w_bb: np.ndarray = self._calc_w_bb()
-
 
     def _rand(self, size: tuple, low: float, high: float, j: bool = False) -> np.ndarray:
         """_summary_
@@ -85,6 +88,10 @@ class Environment:
     def _reshape(self, real: np.ndarray, imag: np.ndarray, size: tuple) -> np.ndarray:
         return np.reshape(real + imag,  size)
 
+    def _half(self, arr: np.ndarray) -> list[np.ndarray]:
+        n = len(arr) // 2
+        return arr[:n], arr[n:]
+
     def get_layer_size(self) -> int:
         k = 2 * (self.n_t_rf * self.n_s + self.n_r * self.n_r_rf)
         return k
@@ -99,16 +106,24 @@ class Environment:
 
         A = (1 + (self.beta * self.P / self.var)) * np.eye(self.n_s)
         B = (1 - self.beta) * c_1 @ H(w) @ h @ v @ H(v) @ H(h) @ w
-        print("reward", "B", B, B.shape)
-        return np.log2(np.linalg.det(A + B))
+        r = np.log2(np.linalg.det(A + B))
+        return np.abs(r) # Check This wit real to
 
     def step(self, action: np.ndarray) -> list[np.ndarray, float]:
-        # To do
+        # TODO
+        n = np.prod(self.size_v_bb) * 2
+        v_bb = action[:n]
+        w_rf = action[n:]
+        self.v_bb = self._reshape(*self._half(v_bb), self.size_v_bb)
+        self.w_rf = self._reshape(*self._half(w_rf), self.size_w_rf)
+        self.w_bb = self._calc_w_bb()
         return self.get_state(), self._reward()
 
     def _calc_v_rf(self) -> np.ndarray:
+        a = self.v_rf_a
+        iter = self.v_rf_iteration
         init = self._complex_rand(self.size_v_rf)
-        v_rf, losses = find_v_rf(init, self.v_bb, self.P, 10, 10_000)
+        v_rf, losses = find_v_rf(init, self.v_bb, self.P, a, iter)
         self.v_rf_loss = losses
         return v_rf
 
@@ -147,6 +162,6 @@ class Environment:
         return f.real, f.imag
 
     def get_state(self) -> np.ndarray:
-        flat_v_bb = self._flat_real_imag(self.v_bb)
-        flat_w_rf = self._flat_real_imag(self.w_rf)
-        return np.concatenate([*flat_v_bb, *flat_w_rf])
+        v_bb_r, v_bb_i = self._flat_real_imag(self.v_bb)
+        w_rf_r, w_rf_i = self._flat_real_imag(self.w_rf)
+        return np.concatenate([v_bb_r, v_bb_i, w_rf_r, w_rf_i])

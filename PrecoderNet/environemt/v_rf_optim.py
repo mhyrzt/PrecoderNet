@@ -41,11 +41,11 @@ def find_v_rf(
 
     losses = []
     optimizer = T.optim.Adam([v_rf])
-    for i in (pbar := tqdm(range(epochs))):
+    for i in (pbar := tqdm(range(epochs), ncols=100)):
         optimizer.zero_grad()
         loss = (constraint(v_rf, v_bb) - p) ** 2
         if i % 50 == 0:
-            pbar.set_description(f"loss = {compstr(loss.item())}")
+            pbar.set_description(f"v_rf loss = {compstr(loss.item())}")
         loss.backward()
         optimizer.step()
         losses.append(loss.item())
