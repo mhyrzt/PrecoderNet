@@ -16,6 +16,6 @@ CONFIG = {
     "n_cl": 8,
     "n_ray": 10,
     "v_rf_a": 100,
-    "v_rf_iteration": 100,
+    "v_rf_iteration": 1000,
     "channel_matrix": channel_matrix
 }

@@ -110,12 +110,12 @@ class Environment:
         return np.abs(r) # Check This wit real to
 
     def step(self, action: np.ndarray) -> list[np.ndarray, float]:
-        # TODO
         n = np.prod(self.size_v_bb) * 2
         v_bb = action[:n]
         w_rf = action[n:]
         self.v_bb = self._reshape(*self._half(v_bb), self.size_v_bb)
         self.w_rf = self._reshape(*self._half(w_rf), self.size_w_rf)
+        self.w_rf = self.w_rf / np.abs(self.w_rf)
         self.w_bb = self._calc_w_bb()
         return self.get_state(), self._reward()
 
