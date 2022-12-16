@@ -31,7 +31,8 @@ from PrecoderNet.random_process import OrnsteinUhlenbeckProcess
 n_s = 6
 n_r = 32
 
-channel_matrix = np.random.randn(n_r, n_s) # Change This However You like :)) Based on Base Station Channel Matrix
+# Change This However You like :)) Based on Base Station Channel Matrix
+channel_matrix = np.random.randn(n_r, n_s) 
 
 CONFIG = {
     "P": 120,
