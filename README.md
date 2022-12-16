@@ -3,9 +3,9 @@
 ![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=for-the-badge&logo=PyTorch&logoColor=white)
 ![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white)
 
-PrecoderNet: Hybrid Beamforming for Millimeter Wave Systems with Deep Reinforcement Learning
+This repository contains the implementation of the "PrecoderNet: Hybrid Beamforming for Millimeter Wave Systems with Deep Reinforcement Learning" paper with DDPG model.
 
-## Results
+__Note:__ based on the paper for calculating `v_rf` based v_bb, the authors suggested using Manifold Optimization (MO) Algorithm to satisfy the given constraint based on the base station's power. But I optimized it with the help of the SGD Algorithm. You can check out `PrecoderNet/environment/v_rf_optim.py`.
 
 ## Installation
 
@@ -88,13 +88,25 @@ ax.grid()
 plt.show()
 ```
 
+## Results
+
+results for following example:
+
+### Reward Plot
+
+![rewards](results/rewards.jpg)
+
+### `v_rf` Plot
+
+![v_rf](results/v_rf_loss.jpg)
+
 ## Article
 
 ```python
 @ARTICLE{9112250,
   author={Wang, Qisheng and Feng, Keming and Li, Xiao and Jin, Shi},
-  journal={IEEE Wireless Communications Letters}, 
-  title={PrecoderNet: Hybrid Beamforming for Millimeter Wave Systems With Deep Reinforcement Learning}, 
+  journal={IEEE Wireless Communications Letters},
+  title={PrecoderNet: Hybrid Beamforming for Millimeter Wave Systems With Deep Reinforcement Learning},
   year={2020},
   volume={9},
   number={10},
