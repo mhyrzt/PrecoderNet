@@ -106,7 +106,8 @@ class Environment:
 
         A = (1 + (self.beta * self.P / self.var)) * np.eye(self.n_s)
         B = (1 - self.beta) * c_1 @ H(w) @ h @ v @ H(v) @ H(h) @ w
-        r = np.log2(np.linalg.det(A + B))
+        r = np.linalg.det(A + B)
+        r = np.log2(r)
         return np.abs(r) # Check This wit real to
 
     def step(self, action: np.ndarray) -> list[np.ndarray, float]:

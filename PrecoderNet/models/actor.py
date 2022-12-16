@@ -20,7 +20,6 @@ class Actor(nn.Module):
             inp = self.layers_dim[i]
             out = self.layers_dim[i + 1]
             layers.append(nn.Linear(inp, out))
-            layers.append(nn.BatchNorm1d(out))
             layers.append(nn.ReLU())
         model = nn.Sequential(*layers)
         return model

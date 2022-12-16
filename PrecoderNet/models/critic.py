@@ -18,9 +18,8 @@ class Critic(nn.Module):
 
     def get_model(self):
         layers = []
-        for i in range(len(self.layers_dim)):
+        for i in range(len(self.layers_dim) - 1):
             layers.append(nn.Linear(self.layers_dim[i], self.layers_dim[i + 1]))
-            layers.append(nn.BatchNorm1d(self.layers_dim[i + 1]))
             layers.append(nn.ReLU())
         model = nn.Sequential(*layers)
         return model

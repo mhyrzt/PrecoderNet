@@ -23,14 +23,16 @@ class ReplyBuffer:
     def _get_ids(self):
         n = range(len(self.current_states))
         return random.sample(n, self.batch_size)
+    
+    def select_from(self, arr, ids):
+        return np.array([arr[i] for i in ids])
 
     def sample(self):
         ids = self._get_ids()
-
-        actions = self.actions[ids]
-        rewards = self.rewards[ids]
-        next_states = self.next_states[ids]
-        current_states = self.current_states[ids]
+        actions = self.select_from(self.actions, ids)
+        rewards = self.select_from(self.rewards, ids)
+        next_states = self.select_from(self.next_states, ids)
+        current_states = self.select_from(self.current_states, ids)
 
         return (current_states, actions, rewards, next_states)
 
