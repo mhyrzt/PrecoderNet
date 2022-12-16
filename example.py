@@ -36,8 +36,8 @@ for _ in (pbar := tqdm(range(count), ncols=128)):
     rewards.append(r)
     pbar.set_description(f"reward = {r}")
 
-fig, ax = plt.subplots(dpi=100)
-ax.plot(rewards)
+fig, ax = plt.subplots(dpi=200, figsize=(8, 4))
+ax.plot(rewards, "-o")
 ax.set_title("Reward Plot")
 ax.set_xlabel("Episode")
 ax.set_ylabel("Reward (Upper Bound)")
