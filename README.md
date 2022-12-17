@@ -5,7 +5,7 @@
 
 This repository contains the implementation of the "PrecoderNet: Hybrid Beamforming for Millimeter Wave Systems with Deep Reinforcement Learning" paper with DDPG model.
 
-__Note:__ based on the paper for calculating `v_rf` based v_bb, the authors suggested using Manifold Optimization (MO) Algorithm to satisfy the given constraint based on the base station's power. But I optimized it with the help of the SGD Algorithm. You can check out `PrecoderNet/environment/v_rf_optim.py`.
+__Note:__ based on the paper for calculating `v_rf` based `v_bb`, the authors suggested using Manifold Optimization (MO) Algorithm to satisfy the given constraint based on the base station's power. But I optimized it with the help of the Adam Algorithm. You can check out `PrecoderNet/environment/v_rf_optim.py`.
 
 ## Installation
 
@@ -18,23 +18,22 @@ pip install -e .
 ## Example
 
 ```python
-
+# Import Modules
 import numpy as np
-import matplotlib.pyplot as plt
-from tqdm.autonotebook import tqdm
-
+from PrecoderNet import Trainer
 from PrecoderNet.ddpg import DDPG
 from PrecoderNet.models import Actor, Critic
 from PrecoderNet.environemt import Environment, plot_loss
 from PrecoderNet.random_process import OrnsteinUhlenbeckProcess
 
+# Config File
 n_s = 6
 n_r = 32
 
-# Change This However You like :)) Based on Base Station Channel Matrix
+# Change This However You like :)) Based on Base Station Channel Matrix 
 channel_matrix = np.random.randn(n_r, n_s) 
 
-CONFIG = {
+ENV_CONFIG = {
     "P": 120,
     "var": 1,
     "beta": 0.1,
@@ -46,56 +45,45 @@ CONFIG = {
     "n_cl": 8,
     "n_ray": 10,
     "v_rf_a": 100,
-    "v_rf_iteration": 1000,
+    "v_rf_iteration": 10_000,
     "channel_matrix": channel_matrix
 }
 
-env = Environment(**CONFIG)
-plot_loss(env.v_rf, env.v_bb, env.v_rf_loss)
-k = env.get_layer_size()
+EPOCHS = 64
+MEM_MAX_LEN = 1024
+MEM_BATCH_SIZE = 16
+RESULT_FOLDER = "./results/results.jpg"
 
-actor = Actor(k, k, (512, 512, 512))
-critic = Critic(k, k, (512, 512, 512))
+# Training
+env = Environment(**ENV_CONFIG)
+plot_loss(env)
+k = env.get_layer_size()
 random_process = OrnsteinUhlenbeckProcess(
     size=k,
     theta=0.15,
     mu=0.0,
     sigma=0.2
 )
-ddpg = DDPG(actor, critic, 10_000, 512, random_process)
+ddpg = DDPG(
+    Actor(k, k, (512, 512, 512)),
+    Critic(k, k, (512, 512, 512)),
+    MEM_MAX_LEN,
+    MEM_BATCH_SIZE,
+    random_process
+)
+Trainer(env, ddpg, EPOCHS) \
+    .train() \
+    .save_progress_plot(RESULT_FOLDER)
 
-count = 600
-rewards = []
-
-s = env.get_state()
-for _ in (pbar := tqdm(range(count), ncols=128)):
-    a = ddpg.get_action(s)
-    ns, r = env.step(a)
-    if np.isnan(r):
-        print("DONE")
-        break
-    ddpg.add(s, a, r, ns)
-    ddpg.step()
-    s = ns
-    rewards.append(r)
-    pbar.set_description(f"reward = {r}")
-
-fig, ax = plt.subplots(dpi=100)
-ax.plot(rewards)
-ax.set_title("Reward Plot")
-ax.set_xlabel("Episode")
-ax.set_ylabel("Reward (Upper Bound)")
-ax.grid()
-plt.show()
 ```
 
 ## Results
 
 results for following example:
 
-### Reward Plot
+### Progress Plot
 
-![rewards](results/rewards.jpg)
+![rewards](results/results.jpg)
 
 ### `v_rf` Plot
 

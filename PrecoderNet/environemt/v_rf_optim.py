@@ -34,18 +34,16 @@ def find_v_rf(
     a: float,
     epochs: int
 ) -> list[np.ndarray]:
-
+    device = "cuda:0" if T.cuda.is_available() else "cpu"
     p -= p / a
-    v_bb = to_tenser(v_bb)
-    v_rf = to_tenser(v_rf).requires_grad_()
+    v_bb = to_tenser(v_bb).to(device)
+    v_rf = to_tenser(v_rf).to(device).requires_grad_()
 
     losses = []
     optimizer = T.optim.Adam([v_rf])
-    for i in (pbar := tqdm(range(epochs), ncols=100)):
+    for i in range(epochs):
         optimizer.zero_grad()
         loss = (constraint(v_rf, v_bb) - p) ** 2
-        if i % 50 == 0:
-            pbar.set_description(f"v_rf loss = {compstr(loss.item())}")
         loss.backward()
         optimizer.step()
         losses.append(loss.item())
@@ -56,20 +54,19 @@ def find_v_rf(
     return v_rf, np.array(losses)
 
 
-def plot_loss(v_rf: np.ndarray, v_bb: np.ndarray, losses: np.ndarray, start: int=0):
-    assert start >= 0 and start < len(losses), "start should be gte 0 and lt len(loss)"
-    y = losses[start:]
-    x = list(range(len(y)))
+def plot_loss(env):
+    v_rf = env.v_rf
+    v_bb = env.v_bb
+    losses = env.v_rf_loss
+    
+    x = list(range(len(losses)))
     c = constraint(to_tenser(v_rf), to_tenser(v_bb)).item()
     t = " | ".join(["Loss $ V_{rf} $", f"$ Constraint = {compstr(c)} $"])
     fig, ax = plt.subplots(dpi=200, figsize=(8, 4))
     
-    ax.plot(x, np.real(y), label="$ Real(loss) $")
-    ax.plot(x, np.imag(y), label="$ Imag(loss) $")
+    ax.plot(x, np.real(losses), label="$ Real(loss) $")
+    ax.plot(x, np.imag(losses), label="$ Imag(loss) $")
     ax.set_title(t)
-    ticks = ax.get_xticks() + start
-    ticks = ticks.astype(np.int32)
-    ax.set_xticklabels(ticks)
     ax.set_xlabel("Epoch")
     ax.set_ylabel("Loss")
     ax.grid()

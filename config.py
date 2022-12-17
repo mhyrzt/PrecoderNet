@@ -4,7 +4,7 @@ n_r = 32
 
 channel_matrix = np.random.randn(n_r, n_s) # Change This However You like :))
 
-CONFIG = {
+ENV_CONFIG = {
     "P": 120,
     "var": 1,
     "beta": 0.1,
@@ -16,6 +16,11 @@ CONFIG = {
     "n_cl": 8,
     "n_ray": 10,
     "v_rf_a": 100,
-    "v_rf_iteration": 1000,
+    "v_rf_iteration": 10_000,
     "channel_matrix": channel_matrix
 }
+
+EPOCHS = 64
+MEM_MAX_LEN = 1024
+MEM_BATCH_SIZE = 16
+RESULT_FOLDER = "./results/results.jpg"

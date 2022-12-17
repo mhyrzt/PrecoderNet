@@ -17,6 +17,7 @@ class DDPG(nn.Module):
         eps_decay: float = 0.99,
     ) -> None:
         super().__init__()
+        self.device = "cuda:0" if T.cuda.is_available() else "cpu"
         self.memory = ReplyBuffer(max_len=max_len, batch_size=batch_size)
         self.random_process = random_process
         
@@ -33,7 +34,7 @@ class DDPG(nn.Module):
         self.epsilon = 1.0
         self.eps_decay = eps_decay
         
-        self.to("cuda:0")
+        self.to(self.device)
 
     def add(self, s, a, r, sn):
         self.memory.add(s, a, r, sn)
@@ -63,11 +64,11 @@ class DDPG(nn.Module):
 
     def sample(self):
         s, a, r, sn = self.memory.sample()
-        s = T.Tensor(s).to("cuda:0")
-        a = T.Tensor(a).to("cuda:0")
-        r = T.Tensor(r).to("cuda:0")
+        s = T.Tensor(s).to(self.device)
+        a = T.Tensor(a).to(self.device)
+        r = T.Tensor(r).to(self.device)
         r = T.reshape(r, (self.memory.batch_size, 1))
-        sn = T.Tensor(sn).to("cuda:0")
+        sn = T.Tensor(sn).to(self.device)
         return s, a, r, sn
 
     def update(self, target: nn.Module, source: nn.Module):
@@ -78,7 +79,7 @@ class DDPG(nn.Module):
 
     def get_action(self, state: np.ndarray):
         s = np.array([state])
-        s = T.Tensor(s).to("cuda:0")
+        s = T.Tensor(s).to(self.device)
         a = self.actor(s).cpu().detach().numpy()
         a += self.epsilon * self.random_process.sample()
         return a[0]

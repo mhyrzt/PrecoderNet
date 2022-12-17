@@ -1,6 +1,6 @@
 import numpy as np
 from PrecoderNet import H
-from .v_rf_optim import find_v_rf
+from .v_rf_optim import find_v_rf, to_tenser, constraint
 
 
 class Environment:
@@ -118,6 +118,9 @@ class Environment:
         self.w_rf = self._reshape(*self._half(w_rf), self.size_w_rf)
         self.w_rf = self.w_rf / np.abs(self.w_rf)
         self.w_bb = self._calc_w_bb()
+        if self.constraint() >= self.P:
+            self.v_rf = self._calc_v_rf()
+        
         return self.get_state(), self._reward()
 
     def _calc_v_rf(self) -> np.ndarray:
@@ -166,3 +169,26 @@ class Environment:
         v_bb_r, v_bb_i = self._flat_real_imag(self.v_bb)
         w_rf_r, w_rf_i = self._flat_real_imag(self.w_rf)
         return np.concatenate([v_bb_r, v_bb_i, w_rf_r, w_rf_i])
+    
+    def constraint(self):
+        v_rf = to_tenser(self.v_rf)
+        v_bb = to_tenser(self.v_bb)
+        return float(np.real(constraint(v_rf, v_bb).item()))
+    
+    def spectral_efficiency(self):
+        c = self._calc_c_n()
+        w = self._calc_w_t()
+        v = self._calc_v_t()
+        h = self.channel_matrix
+        c_1 = np.linalg.inv(c)
+        
+        r = c_1 @ H(w) @ h @ v @ H(v) @ H(h) @ w
+        r = np.eye(self.n_s) + r
+        r = np.linalg.det(r)
+        r = np.log2(r)
+        return np.real(r)
+
+    def is_done(self):
+        power = self.constraint() > self.P
+        reward_nan = np.isnan(self._reward())
+        return (power or reward_nan)
