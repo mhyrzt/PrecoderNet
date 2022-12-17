@@ -1,8 +1,6 @@
 import torch as T
 import torch.nn as nn
 
-
-
 class Critic(nn.Module):
     def __init__(self, input_dim: int, action_dim: int, fcs: tuple[int]) -> None:
         super().__init__()

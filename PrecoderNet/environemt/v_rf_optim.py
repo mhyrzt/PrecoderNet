@@ -1,8 +1,6 @@
 import torch as T
 import numpy as np
 import matplotlib.pyplot as plt
-from tqdm.autonotebook import tqdm
-
 
 def h(x: T.tensor) -> T.tensor:
     return T.conj(x.transpose(1, 0))
