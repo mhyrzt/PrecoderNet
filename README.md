@@ -5,7 +5,7 @@
 
 This repository contains the implementation of the "PrecoderNet: Hybrid Beamforming for Millimeter Wave Systems with Deep Reinforcement Learning" paper with DDPG model.
 
-__Note:__ based on the paper for calculating `v_rf` based `v_bb`, the authors suggested using Manifold Optimization (MO) Algorithm to satisfy the given constraint based on the base station's power. But I optimized it with the help of the Adam Algorithm. You can check out `PrecoderNet/environment/v_rf_optim.py`.
+__Note:__ based on the paper for calculating `v_rf` based on `v_bb` and the given constraint, the authors suggested using Manifold Optimization (MO) Algorithm to satisfy the given constraint based on the base station's power. But I optimized it with the help of the Adam Algorithm. You can check out `PrecoderNet/environment/v_rf_optim.py`.
 
 ## Installation
 
