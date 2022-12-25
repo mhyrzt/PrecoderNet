@@ -50,8 +50,7 @@ class Trainer:
     def log(self):
         reward = self.rewards[-1]
         efficiency = self.efficiency[-1]
-        constraint = self.env.constraint()
-        return f"reward = {round(reward, 3)} | efficiency = {round(efficiency, 3)} | constraint = {round(constraint, 3)}"
+        return f"reward = {round(reward, 3)} | efficiency = {round(efficiency, 3)}"
 
     def check_constraint(self):
         if self.env.constraint() <= self.env.P:

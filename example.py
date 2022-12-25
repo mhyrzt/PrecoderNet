@@ -6,7 +6,7 @@ from PrecoderNet.environemt import Environment, plot_loss
 from PrecoderNet.random_process import OrnsteinUhlenbeckProcess
 
 env = Environment(**ENV_CONFIG)
-plot_loss(env)
+plot_loss(env).savefig("results/v_rf_loss.jpg")
 k = env.get_layer_size()
 random_process = OrnsteinUhlenbeckProcess(
     size=k,
@@ -15,12 +15,13 @@ random_process = OrnsteinUhlenbeckProcess(
     sigma=0.2
 )
 ddpg = DDPG(
-    Actor(k, k, (512, 512, 512)),
-    Critic(k, k, (512, 512, 512)),
+    Actor(k, k, (256, 256, 256)),
+    Critic(k, k, (256, 256, 256)),
     MEM_MAX_LEN,
     MEM_BATCH_SIZE,
     random_process
 )
+
 Trainer(env, ddpg, EPOCHS) \
     .train() \
     .save_progress_plot(RESULT_FOLDER)

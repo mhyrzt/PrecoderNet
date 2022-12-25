@@ -34,7 +34,7 @@ class Environment:
         self.n_ray: int = n_ray  # Scattering Rays
 
         self.size_v_bb: tuple[int] = (self.n_t_rf, self.n_s)
-        self.size_v_rf: tuple[int] = (self.n_t_rf, self.n_s)
+        self.size_v_rf: tuple[int] = (self.n_t, self.n_t_rf)
         self.size_w_rf: tuple[int] = (self.n_r, self.n_r_rf)
 
         self.v_rf_a: float = v_rf_a
@@ -118,8 +118,6 @@ class Environment:
         self.w_rf = self._reshape(*self._half(w_rf), self.size_w_rf)
         self.w_rf = self.w_rf / np.abs(self.w_rf)
         self.w_bb = self._calc_w_bb()
-        if self.constraint() >= self.P:
-            self.v_rf = self._calc_v_rf()
         
         return self.get_state(), self._reward()
 
@@ -143,9 +141,8 @@ class Environment:
     def _calc_psi(self) -> np.ndarray:
         h = self.channel_matrix
         v_t = self._calc_v_t()
-
         a = (1 - self.beta)
-        b = h @ H(v_t) @ H(h)
+        b = h @ v_t @ H(v_t) @ H(h)
         c = (self.beta * self.P + self.var) * np.eye(self.n_r)
 
         return a * b + c
