@@ -66,8 +66,8 @@ random_process = OrnsteinUhlenbeckProcess(
     sigma=0.2
 )
 ddpg = DDPG(
-    Actor(k, k, (512, 512, 512)),
-    Critic(k, k, (512, 512, 512)),
+    Actor(k, k, (256, 256, 256)),
+    Critic(k, k, (256, 256, 256)),
     MEM_MAX_LEN,
     MEM_BATCH_SIZE,
     random_process
