@@ -29,7 +29,7 @@ from PrecoderNet.random_process import OrnsteinUhlenbeckProcess
 # Config File
 n_r = 32
 n_t = 128
-size = (n_r, n_s)
+size = (n_r, n_t)
 
 channel_matrix  = np.random.rand(*size) * 50.0j
 channel_matrix += np.random.rand(*size) * 50.0
